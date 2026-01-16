@@ -36,11 +36,6 @@ const DockerAutocomplete = ({
 			return undefined;
 		}
 
-		if (inputValue === value) {
-			// Don't search if the input matches the selected value
-			return undefined;
-		}
-
 		const fetchSuggestions = async () => {
 			setLoading(true);
 			try {
