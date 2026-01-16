@@ -1,4 +1,4 @@
-import { Stack, Typography, Box } from "@mui/material";
+import { Stack, Typography, Box, Tooltip } from "@mui/material";
 import DataTable from "@/Components/v1/Table/index.jsx";
 import { StatusLabel } from "@/Components/v1/Label/index.jsx";
 import { useTheme } from "@emotion/react";
@@ -28,8 +28,40 @@ const SwarmClusterOverview = ({ swarm }) => {
 
 	const serviceHeaders = [
 		{ id: "name", content: t("name"), render: (row) => row.name },
-		{ id: "image", content: t("image"), render: (row) => row.image },
-		{ id: "mode", content: t("mode"), render: (row) => row.mode },
+		{
+			id: "image",
+			content: t("image"),
+			render: (row) => {
+				const shortImage = row.image?.split("@")[0] || "Unknown";
+				return (
+					<Tooltip title={row.image || ""}>
+						<Typography
+							variant="body2"
+							sx={{
+								maxWidth: "250px",
+								overflow: "hidden",
+								textOverflow: "ellipsis",
+								whiteSpace: "nowrap",
+							}}
+						>
+							{shortImage}
+						</Typography>
+					</Tooltip>
+				);
+			},
+		},
+		{
+			id: "mode",
+			content: t("mode"),
+			render: (row) => (
+				<Typography
+					variant="body2"
+					sx={{ textTransform: "capitalize" }}
+				>
+					{row.mode}
+				</Typography>
+			),
+		},
 		{
 			id: "replicas",
 			content: t("replicas"),
@@ -47,14 +79,15 @@ const SwarmClusterOverview = ({ swarm }) => {
 		availability: node.availability || "Unknown",
 	})) || [];
 
-	const serviceData = swarm.services?.map((service) => ({
-		id: service.id || Math.random().toString(),
-		name: service.name || "Unknown",
-		image: service.image || "Unknown",
-		mode: service.mode || "replicated",
-		replicas: service.replicas || 0,
-		running: service.running_tasks || 0,
-	})) || [];
+	const serviceData =
+		swarm.services?.map((service) => ({
+			id: service.id || Math.random().toString(),
+			name: service.name || "Unknown",
+			image: service.image || "Unknown",
+			mode: service.mode || "replicated",
+			replicas: service.replicas || 0,
+			running: service.running_tasks || 0,
+		})) || [];
 
 	return (
 		<Stack gap={theme.spacing(6)}>

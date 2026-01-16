@@ -1,4 +1,4 @@
-import { Box, Typography, Stack } from "@mui/material";
+import { Box, Typography, Stack, Tooltip } from "@mui/material";
 import DataTable from "@/Components/v1/Table/index.jsx";
 import { StatusLabel } from "@/Components/v1/Label/index.jsx";
 import CustomGauge from "@/Components/v1/Charts/CustomGauge/index.jsx";
@@ -11,6 +11,25 @@ const SwarmContainerList = ({ containers }) => {
 
 	const headers = [
 		{ id: "name", content: t("name"), render: (row) => row.name },
+		{
+			id: "image",
+			content: t("image"),
+			render: (row) => (
+				<Tooltip title={row.full_image || ""}>
+					<Typography
+						variant="body2"
+						sx={{
+							maxWidth: "200px",
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							whiteSpace: "nowrap",
+						}}
+					>
+						{row.base_image}
+					</Typography>
+				</Tooltip>
+			),
+		},
 		{
 			id: "status",
 			content: t("status"),
@@ -44,6 +63,8 @@ const SwarmContainerList = ({ containers }) => {
 		agent: c.agent_name,
 		cpu: (c.stats?.cpu_percent ?? 0),
 		mem: (c.stats?.memory_percent ?? 0),
+		full_image: c.base_image,
+		base_image: c.base_image?.split("@")[0] || "Unknown",
 		net_io: `${formatBytes(c.stats?.network_rx_bytes)} / ${formatBytes(c.stats?.network_tx_bytes)}`,
 		block_io: `${formatBytes(c.stats?.block_read_bytes)} / ${formatBytes(c.stats?.block_write_bytes)}`,
 	})) || [];
