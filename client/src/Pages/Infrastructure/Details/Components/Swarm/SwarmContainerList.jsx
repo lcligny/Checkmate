@@ -42,8 +42,8 @@ const SwarmContainerList = ({ containers }) => {
 		status: c.status,
 		running: c.running,
 		agent: c.agent_name,
-		cpu: (c.stats?.cpu_percent ?? 0) * 100,
-		mem: (c.stats?.memory_percent ?? 0) * 100,
+		cpu: (c.stats?.cpu_percent ?? 0),
+		mem: (c.stats?.memory_percent ?? 0),
 		net_io: `${formatBytes(c.stats?.network_rx_bytes)} / ${formatBytes(c.stats?.network_tx_bytes)}`,
 		block_io: `${formatBytes(c.stats?.block_read_bytes)} / ${formatBytes(c.stats?.block_write_bytes)}`,
 	})) || [];
