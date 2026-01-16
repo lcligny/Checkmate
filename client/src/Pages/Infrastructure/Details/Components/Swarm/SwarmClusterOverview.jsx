@@ -18,7 +18,7 @@ const SwarmClusterOverview = ({ swarm }) => {
 			content: t("status"),
 			render: (row) => (
 				<StatusLabel
-					status={row.status === "ready" || row.status === "active"}
+					status={row.status === "ready" || row.status === "active" ? "up" : "down"}
 					text={row.status}
 				/>
 			),
@@ -34,19 +34,19 @@ const SwarmClusterOverview = ({ swarm }) => {
 	];
 
 	const nodeData = swarm.nodes?.map((node) => ({
-		id: node.id,
-		hostname: node.hostname,
-		role: node.role,
-		status: node.status,
-		availability: node.availability,
+		id: node.id || Math.random().toString(),
+		hostname: node.hostname || "Unknown",
+		role: node.role || "Unknown",
+		status: node.status || "Unknown",
+		availability: node.availability || "Unknown",
 	})) || [];
 
 	const serviceData = swarm.services?.map((service) => ({
-		id: service.id,
-		name: service.name,
-		image: service.image,
-		replicas: service.replicas,
-		running: service.running_tasks,
+		id: service.id || Math.random().toString(),
+		name: service.name || "Unknown",
+		image: service.image || "Unknown",
+		replicas: service.replicas || 0,
+		running: service.running_tasks || 0,
 	})) || [];
 
 	return (
