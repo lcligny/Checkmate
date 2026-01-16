@@ -107,6 +107,7 @@ const InfrastructureDetails = () => {
 						<Tab
 							label={t("swarm")}
 							value="swarm"
+							sx={{ textTransform: "capitalize" }}
 						/>
 					)}
 				</CustomTabList>

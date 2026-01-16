@@ -12,25 +12,6 @@ const SwarmContainerList = ({ containers }) => {
 	const headers = [
 		{ id: "name", content: t("name"), render: (row) => row.name },
 		{
-			id: "image",
-			content: t("image"),
-			render: (row) => (
-				<Tooltip title={row.full_image || ""}>
-					<Typography
-						variant="body2"
-						sx={{
-							maxWidth: "200px",
-							overflow: "hidden",
-							textOverflow: "ellipsis",
-							whiteSpace: "nowrap",
-						}}
-					>
-						{row.base_image}
-					</Typography>
-				</Tooltip>
-			),
-		},
-		{
 			id: "status",
 			content: t("status"),
 			render: (row) => (
@@ -63,8 +44,6 @@ const SwarmContainerList = ({ containers }) => {
 		agent: c.agent_name,
 		cpu: (c.stats?.cpu_percent ?? 0),
 		mem: (c.stats?.memory_percent ?? 0),
-		full_image: c.base_image,
-		base_image: c.base_image?.split("@")[0] || "Unknown",
 		net_io: `${formatBytes(c.stats?.network_rx_bytes)} / ${formatBytes(c.stats?.network_tx_bytes)}`,
 		block_io: `${formatBytes(c.stats?.block_read_bytes)} / ${formatBytes(c.stats?.block_write_bytes)}`,
 	})) || [];
@@ -81,7 +60,10 @@ const SwarmContainerList = ({ containers }) => {
 				headers={headers}
 				data={data}
 				shouldRender={true}
-				config={{ emptyView: t("noContainersFound") }}
+				config={{
+					emptyView: t("noContainersFound"),
+					headerSX: { textTransform: "capitalize" },
+				}}
 			/>
 		</Box>
 	);

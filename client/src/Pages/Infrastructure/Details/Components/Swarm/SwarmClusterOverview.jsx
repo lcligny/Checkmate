@@ -102,7 +102,10 @@ const SwarmClusterOverview = ({ swarm }) => {
 					headers={nodeHeaders}
 					data={nodeData}
 					shouldRender={true}
-					config={{ emptyView: t("noNodesFound") }}
+					config={{
+						emptyView: t("noNodesFound"),
+						headerSX: { textTransform: "capitalize" },
+					}}
 				/>
 			</Box>
 			<Box sx={{ width: "100%", overflowX: "auto" }}>
@@ -116,7 +119,10 @@ const SwarmClusterOverview = ({ swarm }) => {
 					headers={serviceHeaders}
 					data={serviceData}
 					shouldRender={true}
-					config={{ emptyView: t("noServicesFound") }}
+					config={{
+						emptyView: t("noServicesFound"),
+						headerSX: { textTransform: "capitalize" },
+					}}
 				/>
 			</Box>
 		</Stack>

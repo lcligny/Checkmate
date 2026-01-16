@@ -83,6 +83,7 @@ const DataTable = ({
 							<TableCell
 								key={header.id}
 								align={index === 0 ? "left" : "center"}
+								sx={config?.headerSX ?? {}}
 							>
 								{header.content}
 							</TableCell>
