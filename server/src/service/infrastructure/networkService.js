@@ -4,7 +4,22 @@ const SERVICE_NAME = "NetworkService";
 class NetworkService {
 	static SERVICE_NAME = SERVICE_NAME;
 
-	constructor({ axios, got, https, jmespath, GameDig, ping, logger, http, Docker, net, stringService, settingsService }) {
+	constructor({
+		axios,
+		got,
+		https,
+		jmespath,
+		GameDig,
+		ping,
+		logger,
+		http,
+		Docker,
+		net,
+		stringService,
+		settingsService,
+		monitorsRepository,
+		checksRepository,
+	}) {
 		this.TYPE_PING = "ping";
 		this.TYPE_HTTP = "http";
 		this.TYPE_PAGESPEED = "pagespeed";
@@ -26,6 +41,8 @@ class NetworkService {
 		this.net = net;
 		this.stringService = stringService;
 		this.settingsService = settingsService;
+		this.monitorsRepository = monitorsRepository;
+		this.checksRepository = checksRepository;
 
 		const cacheable = new CacheableLookup();
 

@@ -172,6 +172,8 @@ export const initializeServices = async ({
 		net,
 		stringService,
 		settingsService,
+		monitorsRepository,
+		checksRepository,
 	});
 	const emailService = new EmailService(settingsService, fs, path, compile, mjml2html, nodemailer, logger);
 	const errorService = new ErrorService();
