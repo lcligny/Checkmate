@@ -172,7 +172,7 @@ export interface ILighthouseAudit {
 export interface Check {
 	id: string;
 	metadata: CheckMetadata;
-	status: boolean;
+	status: boolean | "degraded";
 	responseTime: number;
 	timings: CheckTimings;
 	statusCode: number;

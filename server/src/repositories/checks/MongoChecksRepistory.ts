@@ -187,7 +187,7 @@ class MongoChecksRepository implements IChecksRepository {
 		return {
 			id: toStringId(doc._id),
 			metadata: mapMetadata(doc.metadata),
-			status: doc.status as boolean | "degraded",
+			status: (doc.status as boolean | "degraded") ?? false,
 			responseTime: doc.responseTime ?? 0,
 			timings: mapTimings(doc.timings),
 			statusCode: doc.statusCode ?? 0,
