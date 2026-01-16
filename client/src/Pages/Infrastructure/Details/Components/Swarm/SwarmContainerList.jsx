@@ -10,7 +10,7 @@ const SwarmContainerList = ({ containers }) => {
 	const { t } = useTranslation();
 
 	const headers = [
-		{ id: "name", content: t("name") },
+		{ id: "name", content: t("name"), render: (row) => row.name },
 		{
 			id: "status",
 			content: t("status"),
@@ -21,11 +21,11 @@ const SwarmContainerList = ({ containers }) => {
 				/>
 			),
 		},
-		{ id: "agent", content: t("agent") },
+		{ id: "agent", content: t("agent"), render: (row) => row.agent },
 		{ id: "cpu", content: t("cpu"), render: (row) => <CustomGauge progress={row.cpu} /> },
 		{ id: "memory", content: t("memory"), render: (row) => <CustomGauge progress={row.mem} /> },
-		{ id: "net_io", content: t("networkIO") },
-		{ id: "block_io", content: t("blockIO") },
+		{ id: "net_io", content: t("networkIO"), render: (row) => row.net_io },
+		{ id: "block_io", content: t("blockIO"), render: (row) => row.block_io },
 	];
 
 	const formatBytes = (bytes) => {

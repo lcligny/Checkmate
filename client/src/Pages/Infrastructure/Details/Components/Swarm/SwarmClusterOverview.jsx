@@ -11,8 +11,8 @@ const SwarmClusterOverview = ({ swarm }) => {
 	if (!swarm) return null;
 
 	const nodeHeaders = [
-		{ id: "hostname", content: t("hostname") },
-		{ id: "role", content: t("role") },
+		{ id: "hostname", content: t("hostname"), render: (row) => row.hostname },
+		{ id: "role", content: t("role"), render: (row) => row.role },
 		{
 			id: "status",
 			content: t("status"),
@@ -23,14 +23,14 @@ const SwarmClusterOverview = ({ swarm }) => {
 				/>
 			),
 		},
-		{ id: "availability", content: t("availability") },
+		{ id: "availability", content: t("availability"), render: (row) => row.availability },
 	];
 
 	const serviceHeaders = [
-		{ id: "name", content: t("name") },
-		{ id: "image", content: t("image") },
-		{ id: "replicas", content: t("replicas"), align: "center" },
-		{ id: "running", content: t("running"), align: "center" },
+		{ id: "name", content: t("name"), render: (row) => row.name },
+		{ id: "image", content: t("image"), render: (row) => row.image },
+		{ id: "replicas", content: t("replicas"), align: "center", render: (row) => row.replicas },
+		{ id: "running", content: t("running"), align: "center", render: (row) => row.running },
 	];
 
 	const nodeData = swarm.nodes?.map((node) => ({
