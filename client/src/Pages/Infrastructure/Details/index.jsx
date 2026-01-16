@@ -8,6 +8,7 @@ import GaugeBoxes from "./Components/GaugeBoxes/index.jsx";
 import AreaChartBoxes from "./Components/AreaChartBoxes/index.jsx";
 import GenericFallback from "@/Components/v1/GenericFallback/index.jsx";
 import NetworkStats from "./Components/NetworkStats/index.jsx";
+import SwarmDetails from "./Components/Swarm/index.jsx";
 import CustomTabList from "@/Components/v1/Tab/index.jsx";
 import TabContext from "@mui/lab/TabContext";
 
@@ -102,6 +103,12 @@ const InfrastructureDetails = () => {
 						label={t("network")}
 						value="network"
 					/>
+					{monitor?.cluster && (
+						<Tab
+							label={t("swarm")}
+							value="swarm"
+						/>
+					)}
 				</CustomTabList>
 				{tab === "details" && (
 					<>
@@ -132,6 +139,12 @@ const InfrastructureDetails = () => {
 						checks={monitor?.stats?.checks}
 						dateRange={dateRange}
 						setDateRange={setDateRange}
+					/>
+				)}
+				{tab === "swarm" && (
+					<SwarmDetails
+						cluster={monitor?.cluster}
+						isLoading={isLoading}
 					/>
 				)}
 			</TabContext>
