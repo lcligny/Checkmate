@@ -332,12 +332,95 @@ class NetworkService {
 		}
 	}
 
+	async getSwarmManagerForTeam(teamId) {
+		try {
+			const monitors = await this.monitorsRepository.findByTeamId(teamId, { type: "hardware" });
+			if (!monitors || monitors.length === 0) return null;
+
+			// Fetch latest check for each hardware monitor to find a manager
+			for (const monitor of monitors) {
+				const latestChecksMap = await this.checksRepository.findLatestChecksByMonitorIds([monitor.id], { limitPerMonitor: 1 });
+				const checks = latestChecksMap[monitor.id];
+				if (checks && checks.length > 0) {
+					const lastCheck = checks[0];
+					if (lastCheck.swarm && lastCheck.swarm.is_swarm && lastCheck.swarm.role === "manager") {
+						return monitor;
+					}
+				}
+			}
+		} catch (error) {
+			this.logger.warn({
+				message: `Error finding Swarm manager for team ${teamId}: ${error.message}`,
+				service: this.SERVICE_NAME,
+				method: "getSwarmManagerForTeam",
+			});
+		}
+		return null;
+	}
+
 	async requestDocker(monitor) {
 		try {
 			if (!monitor.url) {
 				throw new Error("Monitor URL is required");
 			}
 
+			// --- Swarm-Aware Routing Logic ---
+			const swarmManager = await this.getSwarmManagerForTeam(monitor.teamId);
+
+			if (swarmManager) {
+				// Use remote Capture agent on a Swarm manager
+				try {
+					const dockerUrl = swarmManager.url.replace(/\/metrics\/?$/, "/metrics/docker?all=true");
+					const config = {
+						headers: swarmManager.secret ? { Authorization: `Bearer ${swarmManager.secret}` } : undefined,
+					};
+
+					if (swarmManager.ignoreTlsErrors) {
+						config.agent = {
+							https: new this.https.Agent({
+								rejectUnauthorized: false,
+							}),
+						};
+					}
+
+					const res = await this.got(dockerUrl, config);
+					if (res.ok) {
+						const dockerData = JSON.parse(res.body);
+						const containers = dockerData?.data?.containers || [];
+						
+						// Normalize input for matching
+						const normalizedInput = monitor.url.replace(/^\/+/, "").toLowerCase();
+						
+						// Find container in the cluster
+						const target = containers.find(c => 
+							c.container_id.toLowerCase() === normalizedInput ||
+							c.container_name.toLowerCase() === normalizedInput ||
+							c.container_id.toLowerCase().startsWith(normalizedInput)
+						);
+
+						if (target) {
+							return {
+								monitorId: monitor.id,
+								type: monitor.type,
+								status: target.running,
+								code: 200,
+								message: `Docker container status fetched from Swarm cluster via manager ${swarmManager.name}`,
+								responseTime: res.timings.phases.total || 0,
+								payload: target
+							};
+						}
+					}
+				} catch (swarmErr) {
+					this.logger.warn({
+						message: `Failed to fetch Docker status from Swarm manager ${swarmManager.id}: ${swarmErr.message}`,
+						service: this.SERVICE_NAME,
+						method: "requestDocker",
+					});
+					// Fallback to local check if remote fails
+				}
+			}
+
+			// Default: Local socket check
 			const docker = new this.Docker({
 				socketPath: "/var/run/docker.sock",
 				handleError: true, // Enable error handling
