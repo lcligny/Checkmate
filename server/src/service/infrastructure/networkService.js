@@ -113,6 +113,7 @@ class NetworkService {
 
 			const pingResponse = {
 				monitorId: monitor.id,
+				teamId: monitor.teamId,
 				type: "ping",
 				status: response.alive,
 				code: 200,
@@ -418,6 +419,7 @@ class NetworkService {
 						if (target) {
 							return {
 								monitorId: monitor.id,
+								teamId: monitor.teamId,
 								type: monitor.type,
 								status: target.running,
 								code: 200,
@@ -445,6 +447,7 @@ class NetworkService {
 
 			const dockerResponse = {
 				monitorId: monitor.id,
+				teamId: monitor.teamId,
 				type: monitor.type,
 			};
 
@@ -563,6 +566,7 @@ class NetworkService {
 				status: response.success,
 				message: this.stringService.portSuccess,
 				monitorId: monitor.id,
+				teamId: monitor.teamId,
 				type: monitor.type,
 				responseTime: responseTime,
 			};
@@ -591,6 +595,7 @@ class NetworkService {
 				status: true,
 				message: "Success",
 				monitorId: monitor.id,
+				teamId: monitor.teamId,
 				type: "game",
 			};
 

@@ -22,6 +22,15 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 	};
 
 	findById = async (monitorId: string, teamId: string): Promise<Monitor> => {
+		if (!teamId) {
+			console.warn(`[MongoMonitorsRepository](findById) Missing teamId for monitorId: ${monitorId}`);
+			// Fallback to find by ID only if teamId is missing, though this shouldn't happen in normal flow
+			const monitor = await MonitorModel.findById(monitorId);
+			if (!monitor) {
+				throw new AppError({ message: `Monitor with ID ${monitorId} not found (no teamId provided)`, status: 404 });
+			}
+			return this.toEntity(monitor);
+		}
 		const match: { _id: string; teamId: string } = { _id: monitorId, teamId: teamId.toString() };
 		const monitor = await MonitorModel.findOne(match);
 		if (!monitor) {
