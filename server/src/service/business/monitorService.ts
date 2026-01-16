@@ -316,7 +316,7 @@ export class MonitorService implements IMonitorService {
 		if (latestCheck && latestCheck.swarm && latestCheck.swarm.is_swarm) {
 			try {
 				// 1. Find all hardware monitors for this team
-				const teamMonitors = await this.monitorsRepository.findByTeamId(teamId, { type: "hardware" });
+				const teamMonitors = (await this.monitorsRepository.findByTeamId(teamId, { type: "hardware" })) || [];
 				const monitorIds = teamMonitors.map((m: any) => m.id);
 
 				// 2. Fetch the latest check for all these monitors
