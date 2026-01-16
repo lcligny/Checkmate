@@ -1,4 +1,4 @@
-import { Schema, model, Types, type UpdateQuery } from "mongoose";
+import { Schema, model, Types, type UpdateQuery, type Document } from "mongoose";
 import type { Monitor, MonitorMatchMethod, MonitorThresholds } from "@/types/monitor.js";
 import { MonitorTypes } from "@/types/monitor.js";
 import Check from "./Check.js";
@@ -16,7 +16,7 @@ type MonitorDocumentBase = Omit<
 	thresholds?: MonitorThresholds;
 };
 
-interface MonitorDocument extends MonitorDocumentBase {
+interface MonitorDocument extends MonitorDocumentBase, Document {
 	_id: Types.ObjectId;
 	userId: Types.ObjectId;
 	teamId: Types.ObjectId;
@@ -171,7 +171,7 @@ const MonitorSchema = new Schema<MonitorDocument>(
 	}
 );
 
-MonitorSchema.pre("save", function (this: MonitorDocument, next) {
+MonitorSchema.pre("save", function (this: any, next) {
 	if (!this.cpuAlertThreshold || this.isModified("alertThreshold")) {
 		this.cpuAlertThreshold = this.alertThreshold;
 	}
