@@ -108,6 +108,7 @@ export interface CheckSwarmServiceInfo {
 	id: string;
 	name: string;
 	image: string;
+	mode: string;
 	replicas: number;
 	running_tasks: number;
 }

@@ -133,7 +133,14 @@ class MongoChecksRepository implements IChecksRepository {
 				role: swarm.role,
 				status: swarm.status,
 				nodes: swarm.nodes,
-				services: swarm.services,
+				services: (swarm.services ?? []).map((s: any) => ({
+					id: s.id,
+					name: s.name,
+					image: s.image,
+					mode: s.mode,
+					replicas: s.replicas,
+					running_tasks: s.running_tasks,
+				})),
 			};
 		};
 

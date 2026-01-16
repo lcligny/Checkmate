@@ -49,8 +49,13 @@ const SwarmContainerList = ({ containers }) => {
 	})) || [];
 
 	return (
-		<Box>
-			<Typography variant="h4" gutterBottom>{t("swarmContainers")}</Typography>
+		<Box sx={{ width: "100%", overflowX: "auto" }}>
+			<Typography
+				variant="h4"
+				gutterBottom
+			>
+				{t("swarmContainers")}
+			</Typography>
 			<DataTable
 				headers={headers}
 				data={data}

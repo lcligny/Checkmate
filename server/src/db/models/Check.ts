@@ -152,6 +152,7 @@ const swarmServiceSchema = new Schema(
 		id: { type: String },
 		name: { type: String },
 		image: { type: String },
+		mode: { type: String },
 		replicas: { type: Number },
 		running_tasks: { type: Number },
 	},

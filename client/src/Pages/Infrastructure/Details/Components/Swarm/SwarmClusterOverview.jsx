@@ -29,7 +29,13 @@ const SwarmClusterOverview = ({ swarm }) => {
 	const serviceHeaders = [
 		{ id: "name", content: t("name"), render: (row) => row.name },
 		{ id: "image", content: t("image"), render: (row) => row.image },
-		{ id: "replicas", content: t("replicas"), align: "center", render: (row) => row.replicas },
+		{ id: "mode", content: t("mode"), render: (row) => row.mode },
+		{
+			id: "replicas",
+			content: t("replicas"),
+			align: "center",
+			render: (row) => (row.mode === "global" ? t("global") : row.replicas),
+		},
 		{ id: "running", content: t("running"), align: "center", render: (row) => row.running },
 	];
 
@@ -45,14 +51,20 @@ const SwarmClusterOverview = ({ swarm }) => {
 		id: service.id || Math.random().toString(),
 		name: service.name || "Unknown",
 		image: service.image || "Unknown",
+		mode: service.mode || "replicated",
 		replicas: service.replicas || 0,
 		running: service.running_tasks || 0,
 	})) || [];
 
 	return (
 		<Stack gap={theme.spacing(6)}>
-			<Box>
-				<Typography variant="h4" gutterBottom>{t("swarmNodes")}</Typography>
+			<Box sx={{ width: "100%", overflowX: "auto" }}>
+				<Typography
+					variant="h4"
+					gutterBottom
+				>
+					{t("swarmNodes")}
+				</Typography>
 				<DataTable
 					headers={nodeHeaders}
 					data={nodeData}
@@ -60,8 +72,13 @@ const SwarmClusterOverview = ({ swarm }) => {
 					config={{ emptyView: t("noNodesFound") }}
 				/>
 			</Box>
-			<Box>
-				<Typography variant="h4" gutterBottom>{t("swarmServices")}</Typography>
+			<Box sx={{ width: "100%", overflowX: "auto" }}>
+				<Typography
+					variant="h4"
+					gutterBottom
+				>
+					{t("swarmServices")}
+				</Typography>
 				<DataTable
 					headers={serviceHeaders}
 					data={serviceData}
