@@ -376,6 +376,158 @@ class NetworkService {
 		return null;
 	}
 
+	async getDockerSuggestions({ teamId, q }) {
+		try {
+			const swarmManager = await this.getSwarmManagerForTeam(teamId);
+			if (!swarmManager) {
+				return [];
+			}
+
+			const dockerUrl = swarmManager.url.replace(/\/metrics\/?$/, "/metrics/docker?all=true");
+			const config = {
+				headers: swarmManager.secret ? { Authorization: `Bearer ${swarmManager.secret}` } : undefined,
+			};
+
+			if (swarmManager.ignoreTlsErrors) {
+				config.agent = {
+					https: new this.https.Agent({
+						rejectUnauthorized: false,
+					}),
+				};
+			}
+
+			const res = await this.got(dockerUrl, config);
+			if (!res.ok) {
+				throw new Error(`Failed to fetch Docker data from manager ${swarmManager.name}`);
+			}
+
+			const dockerData = JSON.parse(res.body);
+			const containers = dockerData?.data?.containers || [];
+			const services = dockerData?.data?.swarm?.services || [];
+
+			const query = q.toLowerCase();
+			const suggestions = [];
+
+			// Add matching containers
+			containers.forEach((c) => {
+				const name = c.container_name.toLowerCase();
+				const id = c.container_id.toLowerCase();
+				if (name.includes(query) || id.includes(query)) {
+					suggestions.push({
+						label: c.container_name,
+						value: c.container_id, // Use full ID for precision, but user might want name
+						type: "Container",
+						details: `ID: ${c.container_id.substring(0, 12)}`,
+					});
+				}
+			});
+
+			// Add matching services
+			services.forEach((s) => {
+				const name = s.name.toLowerCase();
+				const id = s.id.toLowerCase();
+				if (name.includes(query) || id.includes(query)) {
+					suggestions.push({
+						label: s.name,
+						value: s.name, // Services are usually referenced by name
+						type: "Swarm Service",
+						details: `Replicas: ${s.replicas}`,
+					});
+				}
+			});
+
+			return suggestions.slice(0, 50); // Limit results
+		} catch (error) {
+			this.logger.warn({
+				message: `Error getting Docker suggestions: ${error.message}`,
+				service: this.SERVICE_NAME,
+				method: "getDockerSuggestions",
+			});
+			return [];
+		}
+	}
+
+	async getDockerSuggestions({ teamId, q }) {
+		try {
+			const swarmManager = await this.getSwarmManagerForTeam(teamId);
+			if (!swarmManager) {
+				return [];
+			}
+
+			// Use remote Capture agent on a Swarm manager
+			// Construct URL carefully. Assume agent URL is like http://host:port/api/v1/metrics
+			let dockerUrl;
+			if (swarmManager.url.includes("/api/v1/metrics")) {
+				dockerUrl = swarmManager.url.replace(/\/metrics\/?$/, "/metrics/docker?all=true");
+			} else {
+				// Fallback: append path to url
+				const baseUrl = swarmManager.url.replace(/\/$/, "");
+				dockerUrl = `${baseUrl}/api/v1/metrics/docker?all=true`;
+			}
+
+			const config = {
+				headers: swarmManager.secret ? { Authorization: `Bearer ${swarmManager.secret}` } : undefined,
+			};
+
+			if (swarmManager.ignoreTlsErrors) {
+				config.agent = {
+					https: new this.https.Agent({
+						rejectUnauthorized: false,
+					}),
+				};
+			}
+
+			const res = await this.got(dockerUrl, config);
+			if (!res.ok) {
+				throw new Error(`Failed to fetch Docker data from manager ${swarmManager.name}`);
+			}
+
+			const dockerData = JSON.parse(res.body);
+			const containers = dockerData?.data?.containers || [];
+			const services = dockerData?.data?.swarm?.services || [];
+
+			const query = q.toLowerCase();
+			const suggestions = [];
+
+			// Add matching containers
+			containers.forEach((c) => {
+				const name = c.container_name.toLowerCase();
+				const id = c.container_id.toLowerCase();
+				if (name.includes(query) || id.includes(query)) {
+					suggestions.push({
+						label: c.container_name,
+						value: c.container_id, // Use full ID for precision
+						type: "Container",
+						details: `ID: ${c.container_id.substring(0, 12)}`,
+					});
+				}
+			});
+
+			// Add matching services
+			services.forEach((s) => {
+				const name = s.name.toLowerCase();
+				const id = s.id.toLowerCase();
+				if (name.includes(query) || id.includes(query)) {
+					suggestions.push({
+						label: s.name,
+						value: s.name, // Services are usually referenced by name
+						type: "Swarm Service",
+						details: `Replicas: ${s.replicas}`,
+					});
+				}
+			});
+
+			return suggestions.slice(0, 50); // Limit results
+		} catch (error) {
+			this.logger.warn({
+				message: `Error getting Docker suggestions: ${error.message}`,
+				service: this.SERVICE_NAME,
+				method: "getDockerSuggestions",
+			});
+			return [];
+		}
+	}
+
 	async requestDocker(monitor) {
 		try {
 			if (!monitor.url) {
