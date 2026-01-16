@@ -22,7 +22,7 @@ class MongoMonitorsRepository implements IMonitorsRepository {
 	};
 
 	findById = async (monitorId: string, teamId: string): Promise<Monitor> => {
-		const match: { _id: string; teamId: string } = { _id: monitorId, teamId };
+		const match: { _id: string; teamId: string } = { _id: monitorId, teamId: teamId.toString() };
 		const monitor = await MonitorModel.findOne(match);
 		if (!monitor) {
 			throw new AppError({ message: `Monitor with ID ${monitorId} not found`, status: 404 });
