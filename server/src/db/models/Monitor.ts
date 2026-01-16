@@ -9,7 +9,7 @@ type MonitorDocumentBase = Omit<
 	Monitor,
 	"id" | "userId" | "teamId" | "notifications" | "selectedDisks" | "statusWindow" | "createdAt" | "updatedAt"
 > & {
-	statusWindow: boolean[];
+	statusWindow: (boolean | string)[];
 	notifications: Types.ObjectId[];
 	selectedDisks: string[];
 	matchMethod?: MonitorMatchMethod;
@@ -171,7 +171,7 @@ const MonitorSchema = new Schema<MonitorDocument>(
 	}
 );
 
-MonitorSchema.pre("save", function (next) {
+MonitorSchema.pre("save", function (this: MonitorDocument, next) {
 	if (!this.cpuAlertThreshold || this.isModified("alertThreshold")) {
 		this.cpuAlertThreshold = this.alertThreshold;
 	}
