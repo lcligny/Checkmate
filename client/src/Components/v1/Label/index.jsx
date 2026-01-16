@@ -43,7 +43,95 @@ const BaseLabel = ({ label, styles, children }) => {
 	);
 };
 
-// ... (keep lightenColor and ColoredLabel as is, or add same checks if needed)
+BaseLabel.propTypes = {
+	label: PropTypes.string.isRequired,
+	styles: PropTypes.shape({
+		color: PropTypes.string,
+		backgroundColor: PropTypes.string,
+	}),
+	children: PropTypes.node,
+};
+
+// Produces a lighter color based on a hex color and a percent
+// lightenColor("#067647", 20) will produce a color 20% lighter than #067647
+const lightenColor = (color, percent) => {
+	let r = parseInt(color.substring(1, 3), 16);
+	let g = parseInt(color.substring(3, 5), 16);
+	let b = parseInt(color.substring(5, 7), 16);
+
+	const amt = Math.round((255 * percent) / 100);
+
+	r = r + amt <= 255 ? r + amt : 255;
+	g = g + amt <= 255 ? g + amt : 255;
+	b = b + amt <= 255 ? b + amt : 255;
+
+	r = r.toString(16).padStart(2, "0");
+	g = g.toString(16).padStart(2, "0");
+	b = b.toString(16).padStart(2, "0");
+
+	return `#${r}${g}${b}`;
+};
+
+/**
+ * @component
+ * @param {Object} props
+ * @param {string} props.label - The label of the label
+ * @param {string} props.color - The color of the label, specified in #RRGGBB format
+ * @returns {JSX.Element}
+ * @example
+ * // Render a red label
+ * <ColoredLabel label="Label" color="#FF0000" />
+ */
+
+const ColoredLabel = ({ label, color }) => {
+	const theme = useTheme();
+	// If an invalid color is passed, default to the labelGray color
+	let targetColor = color;
+	if (typeof targetColor !== "string" || !/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(targetColor)) {
+		targetColor = theme.palette.primary?.lowContrast || "#dddddd";
+	}
+
+	// Calculate lighter shades for border and bg
+	const borderColor = lightenColor(targetColor, 20);
+	const bgColor = lightenColor(targetColor, 75);
+
+	return (
+		<BaseLabel
+			label={label}
+			styles={{
+				color: targetColor,
+				borderColor: borderColor,
+				backgroundColor: bgColor,
+			}}
+		></BaseLabel>
+	);
+};
+
+ColoredLabel.propTypes = {
+	label: PropTypes.string.isRequired,
+	color: PropTypes.string.isRequired,
+};
+
+/**
+ * @component
+ * @param {Object} props
+ * @param {'up' | 'down' | 'paused' | 'pending' | 'cannot resolve' | 'published' | 'unpublished'} props.status - The status for the label
+ * @param {string} props.text - The text of the label
+ * @returns {JSX.Element}
+ * @example
+ * // Render an active label
+ * <StatusLabel status="up" text="Active" />
+ */
+
+const statusToTheme = {
+	up: "success",
+	down: "error",
+	paused: "warning",
+	pending: "warning",
+	"cannot resolve": "error",
+	published: "success",
+	unpublished: "error",
+};
 
 const StatusLabel = ({ status, text, customStyles }) => {
 	const theme = useTheme();
