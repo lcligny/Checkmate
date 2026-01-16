@@ -56,11 +56,11 @@ const MonitorSchema = new Schema<MonitorDocument>(
 			type: String,
 		},
 		status: {
-			type: Boolean,
+			type: Schema.Types.Mixed,
 			default: undefined,
 		},
 		statusWindow: {
-			type: [Boolean],
+			type: [Schema.Types.Mixed],
 			default: [],
 		},
 		statusWindowSize: {

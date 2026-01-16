@@ -92,6 +92,7 @@ class StatusService {
 	getStatusString = (status) => {
 		if (status === true) return "up";
 		if (status === false) return "down";
+		if (status === "degraded") return "degraded";
 		return "unknown";
 	};
 
@@ -188,23 +189,28 @@ class StatusService {
 				monitor.status = status;
 			}
 
-			let newStatus = monitor.status;
+			let newStatus = status; // Default to last check result if no flapping detected
 			let statusChanged = false;
 			const prevStatus = monitor.status;
 
 			// Return early if not enough data points
 			if (monitor.statusWindow.length < monitor.statusWindowSize) {
+				// Even if not enough data points, we might want to update the status if it's the first time
+				if (monitor.status !== status) {
+					monitor.status = status;
+					statusChanged = true;
+				}
 				const updated = await this.monitorsRepository.updateById(monitor.id, monitor.teamId, monitor);
 				return {
 					monitor: updated,
-					statusChanged: false,
+					statusChanged,
 					prevStatus,
 					code,
 					timestamp: Date.now(),
 				};
 			}
 
-			// Check if threshold has been met
+			// Check if threshold has been met for DOWN state
 			const failures = monitor.statusWindow.filter((s) => s === false).length;
 			const failureRate = (failures / monitor.statusWindow.length) * 100;
 
@@ -213,10 +219,21 @@ class StatusService {
 				newStatus = false;
 				statusChanged = true;
 			}
-			// If the failure rate is below the threshold and the monitor is down, recover:
-			else if (failureRate < monitor.statusWindowThreshold && monitor.status === false) {
-				newStatus = true;
-				statusChanged = true;
+			// If the failure rate is below the threshold and the monitor was down, recover:
+			else if (failureRate < monitor.statusWindowThreshold) {
+				// If we were down, we recover to the current status (Up or Degraded)
+				if (monitor.status === false) {
+					newStatus = status;
+					statusChanged = true;
+				} else if (monitor.status !== status) {
+					// Handle transitions between Up and Degraded
+					newStatus = status;
+					statusChanged = true;
+				} else {
+					newStatus = monitor.status;
+				}
+			} else {
+				newStatus = monitor.status;
 			}
 
 			if (statusChanged) {
@@ -227,9 +244,17 @@ class StatusService {
 					newStatus,
 				});
 
-				if (newStatus === false) {
-					await this.handleIncidentForCheck(check, monitor, "create", "status change to down");
-				} else if (prevStatus === false) {
+				// Create incident if transitioned to false (Down) or degraded
+				if (newStatus === false || newStatus === "degraded") {
+					// Only create a new incident if the previous status was fully UP
+					if (prevStatus === true) {
+						await this.handleIncidentForCheck(check, monitor, "create", `status change to ${this.getStatusString(newStatus)}`);
+					} else if (prevStatus === "degraded" && newStatus === false) {
+						// Transition from degraded to down - might want to update incident or create new one
+						await this.handleIncidentForCheck(check, monitor, "create", "status change from degraded to down");
+					}
+				} else if (newStatus === true && (prevStatus === false || prevStatus === "degraded")) {
+					// Resolve incident if transitioned back to true (Up)
 					await this.handleIncidentForCheck(check, monitor, "resolve", "status change to up");
 				}
 			}

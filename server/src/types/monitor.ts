@@ -16,8 +16,8 @@ export interface Monitor {
 	teamId: string;
 	name: string;
 	description?: string;
-	status?: boolean;
-	statusWindow: boolean[];
+	status?: boolean | "degraded";
+	statusWindow: (boolean | "degraded")[];
 	statusWindowSize: number;
 	statusWindowThreshold: number;
 	type: MonitorType;

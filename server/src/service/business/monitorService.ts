@@ -337,6 +337,17 @@ export class MonitorService implements IMonitorService {
 							}
 						}
 
+						// Update service health based on latest data from agents
+						if (check.swarm && check.swarm.services && clusterSwarmInfo.services) {
+							check.swarm.services.forEach((s: any) => {
+								const clusterSvc = clusterSwarmInfo.services.find((cs: any) => cs.id === s.id);
+								if (clusterSvc) {
+									clusterSvc.running_tasks = s.running_tasks;
+									clusterSvc.replicas = s.replicas;
+								}
+							});
+						}
+
 						// Collect all containers across agents
 						if (check.docker && Array.isArray(check.docker)) {
 							check.docker.forEach((container: any) => {

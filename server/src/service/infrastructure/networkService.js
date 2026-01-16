@@ -405,27 +405,64 @@ class NetworkService {
 					if (res.ok) {
 						const dockerData = JSON.parse(res.body);
 						const containers = dockerData?.data?.containers || [];
+						const services = dockerData?.data?.swarm?.services || [];
+						const nodes = dockerData?.data?.swarm?.nodes || [];
 						
 						// Normalize input for matching
 						const normalizedInput = monitor.url.replace(/^\/+/, "").toLowerCase();
 						
-						// Find container in the cluster
-						const target = containers.find(c => 
+						// 1. Try finding a specific container first
+						const targetContainer = containers.find(c => 
 							c.container_id.toLowerCase() === normalizedInput ||
 							c.container_name.toLowerCase() === normalizedInput ||
 							c.container_id.toLowerCase().startsWith(normalizedInput)
 						);
 
-						if (target) {
+						if (targetContainer) {
 							return {
 								monitorId: monitor.id,
 								teamId: monitor.teamId,
 								type: monitor.type,
-								status: target.running,
+								status: targetContainer.running,
 								code: 200,
 								message: `Docker container status fetched from Swarm cluster via manager ${swarmManager.name}`,
 								responseTime: res.timings.phases.total || 0,
-								payload: target
+								payload: targetContainer
+							};
+						}
+
+						// 2. Fallback to finding a Swarm Service
+						const targetService = services.find(s => 
+							s.id.toLowerCase() === normalizedInput ||
+							s.name.toLowerCase() === normalizedInput
+						);
+
+						if (targetService) {
+							let status = false;
+							let msg = "";
+							const replicas = targetService.replicas || 0;
+							const running = targetService.running_tasks || 0;
+
+							if (running === replicas && replicas > 0) {
+								status = true; // UP
+								msg = `Swarm service ${targetService.name} is healthy (${running}/${replicas} replicas)`;
+							} else if (running > 0) {
+								status = "degraded"; // DEGRADED
+								msg = `Swarm service ${targetService.name} is degraded (${running}/${replicas} replicas)`;
+							} else {
+								status = false; // DOWN
+								msg = `Swarm service ${targetService.name} is down (0/${replicas} replicas)`;
+							}
+
+							return {
+								monitorId: monitor.id,
+								teamId: monitor.teamId,
+								type: monitor.type,
+								status: status,
+								code: 200,
+								message: msg,
+								responseTime: res.timings.phases.total || 0,
+								payload: targetService
 							};
 						}
 					}
