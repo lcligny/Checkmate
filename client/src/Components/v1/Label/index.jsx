@@ -126,6 +126,7 @@ ColoredLabel.propTypes = {
 const statusToTheme = {
 	up: "success",
 	down: "error",
+	degraded: "warning",
 	paused: "warning",
 	pending: "warning",
 	"cannot resolve": "error",
@@ -161,6 +162,7 @@ StatusLabel.propTypes = {
 	status: PropTypes.oneOf([
 		"up",
 		"down",
+		"degraded",
 		"paused",
 		"pending",
 		"cannot resolve",

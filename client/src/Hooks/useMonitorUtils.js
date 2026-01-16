@@ -34,6 +34,7 @@ const useMonitorUtils = () => {
 		if (typeof monitor === "undefined") return "pending";
 		if (monitor?.isActive === false) return "paused";
 		if (monitor?.status === undefined) return "pending";
+		if (monitor?.status === "degraded") return "degraded";
 		return monitor?.status == true ? "up" : "down";
 	}, []);
 
@@ -42,6 +43,7 @@ const useMonitorUtils = () => {
 	const statusColor = {
 		up: theme.palette.success.lowContrast,
 		down: theme.palette.error.lowContrast,
+		degraded: theme.palette.warning.lowContrast,
 		paused: theme.palette.warning.lowContrast,
 		pending: theme.palette.warning.lowContrast,
 	};
@@ -49,6 +51,7 @@ const useMonitorUtils = () => {
 	const statusToTheme = {
 		up: "success",
 		down: "error",
+		degraded: "warning",
 		paused: "warning",
 		pending: "secondary",
 		"cannot resolve": "tertiary",
