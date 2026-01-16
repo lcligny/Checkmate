@@ -56,6 +56,72 @@ export interface CheckCaptureInfo {
 	mode: string;
 }
 
+export interface CheckContainerSwarmInfo {
+	node_id: string;
+	service_id: string;
+	task_id: string;
+}
+
+export interface CheckContainerStats {
+	cpu_percent: number;
+	memory_usage: number;
+	memory_limit: number;
+	memory_percent: number;
+	network_rx_bytes: number;
+	network_tx_bytes: number;
+	block_read_bytes: number;
+	block_write_bytes: number;
+	pids: number;
+}
+
+export interface CheckContainerInfo {
+	container_id: string;
+	container_name: string;
+	status: string;
+	health?: {
+		healthy: boolean;
+		source: string;
+		message: string;
+	};
+	running: boolean;
+	base_image: string;
+	exposed_ports: Array<{ port: string; protocol: string }>;
+	started_at: number;
+	finished_at: number;
+	stats: CheckContainerStats;
+	swarm?: CheckContainerSwarmInfo;
+}
+
+export interface CheckSwarmNodeInfo {
+	id: string;
+	hostname: string;
+	status: string;
+	availability: string;
+	role: string;
+	manager_status?: {
+		leader: boolean;
+		reachability: string;
+	};
+}
+
+export interface CheckSwarmServiceInfo {
+	id: string;
+	name: string;
+	image: string;
+	replicas: number;
+	running_tasks: number;
+}
+
+export interface CheckSwarmInfo {
+	is_swarm: boolean;
+	node_id?: string;
+	node_name?: string;
+	role?: string;
+	status?: string;
+	nodes?: CheckSwarmNodeInfo[];
+	services?: CheckSwarmServiceInfo[];
+}
+
 export interface CheckDiskInfo {
 	device: string;
 	mountpoint: string;
@@ -117,6 +183,8 @@ export interface Check {
 	memory: CheckMemoryInfo;
 	disk: CheckDiskInfo[];
 	host: CheckHostInfo;
+	docker?: CheckContainerInfo[];
+	swarm?: CheckSwarmInfo;
 	errors: CheckErrorInfo[];
 	capture: CheckCaptureInfo;
 	net: CheckNetworkInterfaceInfo[];

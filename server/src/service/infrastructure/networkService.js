@@ -278,7 +278,53 @@ class NetworkService {
 
 	async requestHardware(monitor) {
 		try {
-			return await this.requestHttp(monitor);
+			// Fetch general system metrics
+			const hardwareResponse = await this.requestHttp(monitor);
+
+			// If general metrics were fetched successfully, try to fetch Docker metrics
+			if (hardwareResponse.status && monitor.url) {
+				try {
+					const dockerUrl = monitor.url.replace(/\/metrics\/?$/, "/metrics/docker");
+					const config = {
+						headers: monitor.secret ? { Authorization: `Bearer ${monitor.secret}` } : undefined,
+					};
+
+					if (monitor.ignoreTlsErrors) {
+						config.agent = {
+							https: new this.https.Agent({
+								rejectUnauthorized: false,
+							}),
+						};
+					}
+
+					const dockerRes = await this.got(dockerUrl, config);
+					if (dockerRes.ok) {
+						const dockerData = JSON.parse(dockerRes.body);
+						if (dockerData && dockerData.data) {
+							// Merge Docker and Swarm data into the hardware response payload
+							hardwareResponse.payload.data.docker = dockerData.data.containers;
+							hardwareResponse.payload.data.swarm = dockerData.data.swarm;
+
+							// Merge any Docker-specific errors
+							if (dockerData.errors && dockerData.errors.length > 0) {
+								if (!hardwareResponse.payload.errors) {
+									hardwareResponse.payload.errors = [];
+								}
+								hardwareResponse.payload.errors.push(...dockerData.errors);
+							}
+						}
+					}
+				} catch (dockerErr) {
+					this.logger.warn({
+						message: `Failed to fetch Docker metrics for hardware monitor ${monitor.id}: ${dockerErr.message}`,
+						service: this.SERVICE_NAME,
+						method: "requestHardware",
+					});
+					// We don't fail the whole hardware check if only Docker metrics fail
+				}
+			}
+
+			return hardwareResponse;
 		} catch (err) {
 			err.service = this.SERVICE_NAME;
 			err.method = "requestHardware";

@@ -390,12 +390,14 @@ class StatusService {
 		}
 
 		if (type === "hardware") {
-			const { cpu, memory, disk, host, net } = payload?.data ?? {};
+			const { cpu, memory, disk, host, net, docker, swarm } = payload?.data ?? {};
 			const { errors } = payload?.errors ?? [];
 			check.cpu = cpu ?? {};
 			check.memory = memory ?? {};
 			check.disk = disk ?? {};
 			check.host = host ?? {};
+			check.docker = docker ?? [];
+			check.swarm = swarm ?? undefined;
 			check.errors = errors ?? [];
 			check.capture = payload?.capture ?? {};
 			check.net = net ?? {};

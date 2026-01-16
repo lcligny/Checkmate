@@ -127,6 +127,100 @@ const captureSchema = new Schema<CheckCaptureInfo>(
 	{ _id: false }
 );
 
+const swarmManagerStatusSchema = new Schema(
+	{
+		leader: { type: Boolean },
+		reachability: { type: String },
+	},
+	{ _id: false }
+);
+
+const swarmNodeSchema = new Schema(
+	{
+		id: { type: String },
+		hostname: { type: String },
+		status: { type: String },
+		availability: { type: String },
+		role: { type: String },
+		manager_status: { type: swarmManagerStatusSchema },
+	},
+	{ _id: false }
+);
+
+const swarmServiceSchema = new Schema(
+	{
+		id: { type: String },
+		name: { type: String },
+		image: { type: String },
+		replicas: { type: Number },
+		running_tasks: { type: Number },
+	},
+	{ _id: false }
+);
+
+const swarmSchema = new Schema(
+	{
+		is_swarm: { type: Boolean, default: false },
+		node_id: { type: String },
+		node_name: { type: String },
+		role: { type: String },
+		status: { type: String },
+		nodes: { type: [swarmNodeSchema] },
+		services: { type: [swarmServiceSchema] },
+	},
+	{ _id: false }
+);
+
+const containerSwarmInfoSchema = new Schema(
+	{
+		node_id: { type: String },
+		service_id: { type: String },
+		task_id: { type: String },
+	},
+	{ _id: false }
+);
+
+const containerStatsSchema = new Schema(
+	{
+		cpu_percent: { type: Number },
+		memory_usage: { type: Number },
+		memory_limit: { type: Number },
+		memory_percent: { type: Number },
+		network_rx_bytes: { type: Number },
+		network_tx_bytes: { type: Number },
+		block_read_bytes: { type: Number },
+		block_write_bytes: { type: Number },
+		pids: { type: Number },
+	},
+	{ _id: false }
+);
+
+const containerInfoSchema = new Schema(
+	{
+		container_id: { type: String },
+		container_name: { type: String },
+		status: { type: String },
+		health: {
+			healthy: { type: Boolean },
+			source: { type: String },
+			message: { type: String },
+		},
+		running: { type: Boolean },
+		base_image: { type: String },
+		exposed_ports: [
+			{
+				port: { type: String },
+				protocol: { type: String },
+			},
+		],
+		started_at: { type: Number },
+		finished_at: { type: Number },
+		stats: { type: containerStatsSchema },
+		swarm: { type: containerSwarmInfoSchema },
+	},
+	{ _id: false }
+);
+
 const networkInterfaceSchema = new Schema<CheckNetworkInterfaceInfo>(
 	{
 		name: { type: String, default: "" },
@@ -244,6 +338,14 @@ const CheckSchema = new Schema<CheckDocument>(
 		host: {
 			type: hostSchema,
 			default: () => ({}),
+		},
+		docker: {
+			type: [containerInfoSchema],
+			default: undefined,
+		},
+		swarm: {
+			type: swarmSchema,
+			default: undefined,
 		},
 		errors: {
 			type: [errorSchema],

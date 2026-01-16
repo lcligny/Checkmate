@@ -292,9 +292,9 @@ export class MonitorService implements IMonitorService {
 
 		const rangeKey = (dateRange as DateRangeKey) ?? "recent";
 		const { start, end } = this.getDateRange(rangeKey);
-		const checksData = await this.checksRepository.findDateRangeChecksByMonitor(monitor.id, start, end, this.getDateFormat(rangeKey), {
+		const checksData = (await this.checksRepository.findDateRangeChecksByMonitor(monitor.id, start, end, this.getDateFormat(rangeKey), {
 			type: monitor.type,
-		});
+		})) as any; // Cast to any to access the complex result
 
 		if (checksData.monitorType !== "hardware") {
 			throw new AppError({ message: "Unable to load hardware stats for this monitor", status: 500 });
@@ -306,10 +306,68 @@ export class MonitorService implements IMonitorService {
 			checks: checksData.checks,
 		};
 
-		return {
+		const result: any = {
 			...monitor,
 			stats,
 		};
+
+		// --- Swarm Discovery & Deduplication Logic ---
+		const latestCheck = checksData.aggregateData.latestCheck;
+		if (latestCheck && latestCheck.swarm && latestCheck.swarm.is_swarm) {
+			try {
+				// 1. Find all hardware monitors for this team
+				const teamMonitors = await this.monitorsRepository.findByTeamId(teamId, { type: "hardware" });
+				const monitorIds = teamMonitors.map((m: any) => m.id);
+
+				// 2. Fetch the latest check for all these monitors
+				const latestChecksMap = await this.checksRepository.findLatestChecksByMonitorIds(monitorIds, { limitPerMonitor: 1 });
+
+				const containersMap = new Map<string, any>();
+				let clusterSwarmInfo: any = latestCheck.swarm; // Start with current monitor's swarm info
+
+				// 3. Aggregate and deduplicate
+				Object.values(latestChecksMap).forEach((checks: any[]) => {
+					if (checks.length > 0) {
+						const check = checks[0];
+						// If we find a manager's check, it has more complete swarm info (nodes, services)
+						if (check.swarm && check.swarm.is_swarm && check.swarm.role === "manager") {
+							// Prefer manager info if current is worker, or if this manager is the one we're looking at
+							if (clusterSwarmInfo.role !== "manager" || check.metadata.monitorId === monitorId) {
+								clusterSwarmInfo = check.swarm;
+							}
+						}
+
+						// Collect all containers across agents
+						if (check.docker && Array.isArray(check.docker)) {
+							check.docker.forEach((container: any) => {
+								if (!containersMap.has(container.container_id)) {
+									// Add agent info to the container for the UI to show where it's running
+									const agent = teamMonitors.find((m: any) => m.id === check.metadata.monitorId);
+									containersMap.set(container.container_id, {
+										...container,
+										agent_name: agent ? agent.name : "Unknown",
+										agent_id: check.metadata.monitorId,
+									});
+								}
+							});
+						}
+					}
+				});
+
+				result.cluster = {
+					swarm: clusterSwarmInfo,
+					containers: Array.from(containersMap.values()),
+				};
+			} catch (err: any) {
+				this.logger.warn({
+					message: `Failed to reconstruct Swarm cluster state for monitor ${monitorId}: ${err.message}`,
+					service: SERVICE_NAME,
+					method: "getHardwareDetailsById",
+				});
+			}
+		}
+
+		return result;
 	};
 
 	getPageSpeedDetailsById = async ({ teamId, monitorId, dateRange }: { teamId: string; monitorId: string; dateRange: string }): Promise<any> => {

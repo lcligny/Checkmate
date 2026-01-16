@@ -107,6 +107,36 @@ class MongoChecksRepository implements IChecksRepository {
 				usage_percent: disk?.usage_percent ?? 0,
 			}));
 
+		const mapDocker = (docker?: any[]): any[] | undefined => {
+			if (!docker) return undefined;
+			return docker.map((c) => ({
+				container_id: c.container_id,
+				container_name: c.container_name,
+				status: c.status,
+				health: c.health,
+				running: c.running,
+				base_image: c.base_image,
+				exposed_ports: c.exposed_ports,
+				started_at: c.started_at,
+				finished_at: c.finished_at,
+				stats: c.stats,
+				swarm: c.swarm,
+			}));
+		};
+
+		const mapSwarm = (swarm?: any): any | undefined => {
+			if (!swarm) return undefined;
+			return {
+				is_swarm: swarm.is_swarm,
+				node_id: swarm.node_id,
+				node_name: swarm.node_name,
+				role: swarm.role,
+				status: swarm.status,
+				nodes: swarm.nodes,
+				services: swarm.services,
+			};
+		};
+
 		const mapErrors = (errors?: CheckErrorInfo[]): CheckErrorInfo[] =>
 			(errors ?? []).map((error) => ({
 				metric: error?.metric ?? [],
@@ -162,6 +192,8 @@ class MongoChecksRepository implements IChecksRepository {
 			memory: mapMemory(doc.memory),
 			disk: mapDisks(doc.disk),
 			host: mapHost(doc.host),
+			docker: mapDocker(doc.docker),
+			swarm: mapSwarm(doc.swarm),
 			errors: mapErrors(doc.errors),
 			capture: mapCapture(doc.capture),
 			net: mapNet(doc.net),
