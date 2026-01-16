@@ -80,6 +80,18 @@ class NetworkService {
 	 * @async
 	 * @returns {Promise<AxiosResponse>} The response from the axios GET request.
 	 */
+	async getDockerSuggestions(config) {
+		const { q } = config;
+		const params = new URLSearchParams();
+		if (q) params.append("q", q);
+
+		return this.axiosInstance.get(`/monitors/suggestions/docker?${params.toString()}`, {
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+	}
+
 	async getMonitorGames() {
 		return this.axiosInstance.get(`/monitors/games`, {
 			headers: {

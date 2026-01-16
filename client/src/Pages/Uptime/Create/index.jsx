@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import Breadcrumbs from "@/Components/v1/Breadcrumbs/index.jsx";
 import TextInput from "@/Components/v1/Inputs/TextInput/index.jsx";
+import DockerAutocomplete from "@/Components/v1/Inputs/DockerAutocomplete/index.jsx";
 import { HttpAdornment } from "@/Components/v1/Inputs/TextInput/Adornments/index.jsx";
 import Radio from "@/Components/v1/Inputs/Radio/index.jsx";
 import Select from "@/Components/v1/Inputs/Select/index.jsx";
@@ -559,27 +560,40 @@ const UptimeCreate = ({ isClone = false }) => {
 						</Typography>
 					</Box>
 					<Stack gap={theme.spacing(20)}>
-						<TextInput
-							id="monitor-url"
-							name="url"
-							type={monitor?.type === "http" ? "url" : "text"}
-							label={
-								(monitor.type === "http" || monitor.type === "port") && !isCreate
-									? t("url")
-									: monitorTypeMaps[monitor.type].label || t("urlMonitor")
-							}
-							placeholder={monitorTypeMaps[monitor.type].placeholder || ""}
-							value={parsedUrl?.host + parsedUrl?.pathname || monitor?.url || ""}
-							https={isCreate ? https : protocol === "https"}
-							startAdornment={
-								monitor?.type === "http" && (
-									<HttpAdornment https={isCreate ? https : protocol === "https"} />
-								)
-							}
-							helperText={errors["url"]}
-							onChange={onChange}
-							disabled={!isCreate}
-						/>
+						{monitor.type === "docker" ? (
+							<DockerAutocomplete
+								name="url"
+								label={monitorTypeMaps[monitor.type].label}
+								placeholder={monitorTypeMaps[monitor.type].placeholder}
+								value={monitor.url || ""}
+								onChange={onChange}
+								error={errors["url"] ? true : false}
+								helperText={errors["url"]}
+								disabled={!isCreate}
+							/>
+						) : (
+							<TextInput
+								id="monitor-url"
+								name="url"
+								type={monitor?.type === "http" ? "url" : "text"}
+								label={
+									(monitor.type === "http" || monitor.type === "port") && !isCreate
+										? t("url")
+										: monitorTypeMaps[monitor.type].label || t("urlMonitor")
+								}
+								placeholder={monitorTypeMaps[monitor.type].placeholder || ""}
+								value={parsedUrl?.host + parsedUrl?.pathname || monitor?.url || ""}
+								https={isCreate ? https : protocol === "https"}
+								startAdornment={
+									monitor?.type === "http" && (
+										<HttpAdornment https={isCreate ? https : protocol === "https"} />
+									)
+								}
+								helperText={errors["url"]}
+								onChange={onChange}
+								disabled={!isCreate}
+							/>
+						)}
 						<TextInput
 							name="port"
 							type="number"

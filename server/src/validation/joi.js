@@ -225,6 +225,10 @@ const getHardwareDetailsByIdQueryValidation = joi.object({
 	dateRange: joi.string().valid("recent", "hour", "day", "week", "month", "all"),
 });
 
+const getDockerSuggestionsQueryValidation = joi.object({
+	q: joi.string().allow("").optional(),
+});
+
 //****************************************
 // Alerts
 //****************************************
@@ -728,6 +732,7 @@ export {
 	getMonitorsWithChecksQueryValidation,
 	getHardwareDetailsByIdParamValidation,
 	getHardwareDetailsByIdQueryValidation,
+	getDockerSuggestionsQueryValidation,
 	getCertificateParamValidation,
 	editMonitorBodyValidation,
 	pauseMonitorParamValidation,

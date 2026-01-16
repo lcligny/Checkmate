@@ -12,6 +12,7 @@ import {
 	getCertificateParamValidation,
 	getHardwareDetailsByIdParamValidation,
 	getHardwareDetailsByIdQueryValidation,
+	getDockerSuggestionsQueryValidation,
 } from "@/validation/joi.js";
 import sslChecker from "ssl-checker";
 import {
@@ -32,9 +33,11 @@ class MonitorController {
 	static SERVICE_NAME = SERVICE_NAME;
 
 	private monitorService: IMonitorService;
+	private networkService: any;
 
-	constructor(monitorService: IMonitorService) {
+	constructor(monitorService: IMonitorService, networkService: any) {
 		this.monitorService = monitorService;
+		this.networkService = networkService;
 	}
 
 	get serviceName() {
@@ -47,6 +50,24 @@ class MonitorController {
 			throw new AppError({ message: "Access denied", status: 403 });
 		}
 	}
+
+	getDockerSuggestions = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			await getDockerSuggestionsQueryValidation.validateAsync(req.query);
+			const teamId = requireTeamId(req?.user?.teamId);
+			const q = optionalString(req?.query?.q, "q") || "";
+
+			const suggestions = await this.networkService.getDockerSuggestions({ teamId, q });
+
+			return res.status(200).json({
+				success: true,
+				msg: "Docker suggestions retrieved successfully",
+				data: suggestions,
+			});
+		} catch (error) {
+			next(error);
+		}
+	};
 
 	getMonitorCertificate = async (req: Request, res: Response, next: NextFunction) => {
 		try {

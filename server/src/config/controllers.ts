@@ -16,7 +16,7 @@ export const initializeControllers = (services: InitializedSerivces) => {
 
 	controllers.authController = new AuthController(services.userService);
 
-	controllers.monitorController = new MonitorController(services.monitorService);
+	controllers.monitorController = new MonitorController(services.monitorService, services.networkService);
 
 	controllers.settingsController = new SettingsController(services.settingsService, services.emailService, services.db);
 	controllers.checkController = new CheckController(services.checkService);
