@@ -64,13 +64,13 @@ const DataTable = ({
 						paddingLeft: theme.spacing(8),
 					},
 					"& :is(th)": {
-						backgroundColor: theme.palette.secondary.main,
-						color: theme.palette.secondary.contrastText,
+						backgroundColor: theme.palette.secondary?.main || "#eeeeee",
+						color: theme.palette.secondary?.contrastText || "#000000",
 						fontWeight: 600,
 					},
 					"& :is(td)": {
-						backgroundColor: theme.palette.primary.main,
-						color: theme.palette.primary.contrastTextSecondary,
+						backgroundColor: theme.palette.primary?.main || "#ffffff",
+						color: theme.palette.primary?.contrastTextSecondary || "#000000",
 					},
 					"& .MuiTableBody-root .MuiTableRow-root:last-child .MuiTableCell-root": {
 						borderBottom: "none",

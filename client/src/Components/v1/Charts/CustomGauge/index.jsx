@@ -63,11 +63,11 @@ const CustomGauge = ({
 
 	let fillColor;
 	if (progressWithinRange < 50) {
-		fillColor = theme.palette.success.main;
+		fillColor = theme.palette.success?.main || "#4caf50";
 	} else if (progressWithinRange < 80) {
-		fillColor = theme.palette.warning.lowContrast;
+		fillColor = theme.palette.warning?.lowContrast || theme.palette.warning?.main || "#ff9800";
 	} else {
-		fillColor = theme.palette.error.lowContrast;
+		fillColor = theme.palette.error?.lowContrast || theme.palette.error?.main || "#f44336";
 	}
 
 	if (isLoading) {
@@ -89,7 +89,7 @@ const CustomGauge = ({
 			className="radial-chart"
 			width={radius}
 			height={radius}
-			sx={{ backgroundColor: theme.palette.primary.main, borderRadius: "50%" }}
+			sx={{ backgroundColor: theme.palette.primary?.main || "transparent", borderRadius: "50%" }}
 		>
 			<svg
 				viewBox={`0 0 ${totalSize} ${totalSize}`}
@@ -98,7 +98,7 @@ const CustomGauge = ({
 			>
 				<circle
 					className="radial-chart-base"
-					stroke={theme.palette.secondary.light}
+					stroke={theme.palette.secondary?.light || theme.palette.secondary?.main || "#eeeeee"}
 					strokeWidth={strokeWidth}
 					fill="none"
 					cx={totalSize / 2} // Center the circle

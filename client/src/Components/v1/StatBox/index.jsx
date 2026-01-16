@@ -42,12 +42,17 @@ const StatBox = ({
 }) => {
 	const theme = useTheme();
 	const { statusToTheme } = useMonitorUtils();
-	const themeColor = statusToTheme[status];
+	const themeColor = statusToTheme[status] || "primary";
+
+	const paletteColor = theme.palette[themeColor] || theme.palette.primary;
+	const mainColor = paletteColor?.main || theme.palette.primary.main;
+	const lowContrastColor = paletteColor?.lowContrast || mainColor;
+	const contrastTextColor = paletteColor?.contrastText || theme.palette.primary.contrastText;
 
 	const statusBoxStyles = gradient
 		? {
-				background: `linear-gradient(to bottom right, ${theme.palette[themeColor].main} 30%, ${theme.palette[themeColor].lowContrast} 70%)`,
-				borderColor: theme.palette[themeColor].lowContrast,
+				background: `linear-gradient(to bottom right, ${mainColor} 30%, ${lowContrastColor} 70%)`,
+				borderColor: lowContrastColor,
 			}
 		: {
 				background: `linear-gradient(340deg, ${theme.palette.tertiary.main} 10%, ${theme.palette.primary.main} 45%)`,
@@ -56,7 +61,7 @@ const StatBox = ({
 
 	const headingStyles = gradient
 		? {
-				color: theme.palette[themeColor].contrastText,
+				color: contrastTextColor,
 			}
 		: {
 				color: theme.palette.primary.contrastTextSecondary,
@@ -65,9 +70,9 @@ const StatBox = ({
 	const spanFixedStyles = { marginLeft: theme.spacing(2), fontSize: 15, fontWeight: 600 };
 	const detailTextStyles = gradient
 		? {
-				color: theme.palette[themeColor].contrastText,
+				color: contrastTextColor,
 				"& span": {
-					color: theme.palette[themeColor].contrastText,
+					color: contrastTextColor,
 					...spanFixedStyles,
 				},
 			}
