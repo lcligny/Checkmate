@@ -180,15 +180,25 @@ class CheckModule {
 
 	ackCheck = async (checkId, teamId, ack) => {
 		try {
-			const query = { _id: checkId, "metadata.teamId": teamId };
-			const result = await CheckModel.updateMany(query, { $set: { ack, ackAt: new Date() } });
+			const check = await CheckModel.findOne({ _id: checkId, "metadata.teamId": teamId });
 
-			if (result.matchedCount === 0) {
+			if (!check) {
 				throw new Error("Check not found");
 			}
 
-			const updatedCheck = await CheckModel.findOne(query);
-			return updatedCheck;
+			// MongoDB Time Series collections require the query to contain the metaField (metadata)
+			// and NOT contain fields that are not part of the metaField (like _id) for updates.
+			// We use the full metadata and createdAt timestamp to target the specific document.
+			const query = {
+				"metadata.monitorId": check.metadata.monitorId,
+				"metadata.teamId": check.metadata.teamId,
+				"metadata.type": check.metadata.type,
+				createdAt: check.createdAt,
+			};
+
+			await CheckModel.updateMany(query, { $set: { ack, ackAt: new Date() } });
+
+			return CheckModel.findOne(query);
 		} catch (error) {
 			error.service = SERVICE_NAME;
 			error.method = "ackCheck";
