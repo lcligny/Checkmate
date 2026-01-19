@@ -445,24 +445,21 @@ class MongoChecksRepository implements IChecksRepository {
 	};
 
 	private getHardwareAggregateData = async (monitorId: string, dates: DateRange): Promise<HardwareAggregateData> => {
-		const result = await CheckModel.aggregate([
-			{
-				$match: {
-					"metadata.monitorId": new mongoose.Types.ObjectId(monitorId),
-					"metadata.type": "hardware",
-					createdAt: { $gte: dates.start, $lte: dates.end },
-				},
-			},
-			{ $sort: { createdAt: -1 } },
-			{
-				$group: {
-					_id: null,
-					latestCheck: { $first: "$$ROOT" },
-					totalChecks: { $sum: 1 },
-				},
-			},
+		const filter = {
+			"metadata.monitorId": new mongoose.Types.ObjectId(monitorId),
+			"metadata.type": "hardware",
+			createdAt: { $gte: dates.start, $lte: dates.end },
+		};
+
+		const [latestCheck, totalChecks] = await Promise.all([
+			CheckModel.findOne(filter).sort({ createdAt: -1 }).lean(),
+			CheckModel.countDocuments(filter),
 		]);
-		return result[0] || { totalChecks: 0, latestCheck: null };
+
+		return {
+			latestCheck: latestCheck as any,
+			totalChecks,
+		};
 	};
 
 	private getHardwareUpChecks = async (monitorId: string, dates: DateRange): Promise<HardwareUpChecks> => {
