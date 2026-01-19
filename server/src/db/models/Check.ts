@@ -269,20 +269,17 @@ const metadataSchema = new Schema<CheckMetadataDocument>(
 			ref: "Monitor",
 			required: true,
 			immutable: true,
-			index: true,
 		},
 		teamId: {
 			type: Schema.Types.ObjectId,
 			ref: "Team",
 			required: true,
 			immutable: true,
-			index: true,
 		},
 		type: {
 			type: String,
 			enum: MonitorTypes,
 			required: true,
-			index: true,
 		},
 	},
 	{ _id: false }

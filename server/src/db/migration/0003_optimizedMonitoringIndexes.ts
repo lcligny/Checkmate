@@ -23,6 +23,20 @@ async function optimizedMonitoringIndexes() {
 		}
 	}
 
+	// Drop single-field indexes if they exist to force usage of composite indexes
+	const redundantIndexes = ["metadata.monitorId_1", "metadata.teamId_1"];
+	for (const indexName of redundantIndexes) {
+		try {
+			const existingIndexes = await collection.indexes();
+			if (existingIndexes.find(idx => idx.name === indexName)) {
+				await collection.dropIndex(indexName);
+				console.log(`[Migration] Dropped redundant index ${indexName}`);
+			}
+		} catch (error) {
+			console.warn(`[Migration] Warning dropping index ${indexName}:`, error);
+		}
+	}
+
 	// Correct TTL index: Remove old one if exists and create new one without partial filter
 	try {
 		// Attempt to drop the index named 'expiry_1' which might have the faulty partial filter
