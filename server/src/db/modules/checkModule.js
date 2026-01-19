@@ -180,16 +180,14 @@ class CheckModule {
 
 	ackCheck = async (checkId, teamId, ack) => {
 		try {
-			const updatedCheck = await CheckModel.findOneAndUpdate(
-				{ _id: checkId, "metadata.teamId": teamId },
-				{ $set: { ack, ackAt: new Date() } },
-				{ new: true }
-			);
+			const query = { _id: checkId, "metadata.teamId": teamId };
+			const result = await CheckModel.updateMany(query, { $set: { ack, ackAt: new Date() } });
 
-			if (!updatedCheck) {
+			if (result.matchedCount === 0) {
 				throw new Error("Check not found");
 			}
 
+			const updatedCheck = await CheckModel.findOne(query);
 			return updatedCheck;
 		} catch (error) {
 			error.service = SERVICE_NAME;
