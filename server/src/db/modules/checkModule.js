@@ -215,11 +215,16 @@ class CheckModule {
 
 	getChecksSummaryByTeamId = async ({ teamId }) => {
 		try {
+			// Optimization: Filter by recent checks (last 2 hours) and only failed checks.
+			// This avoids scanning millions of historical checks for a real-time dashboard summary.
+			const twoHoursAgo = new Date(Date.now() - 1000 * 60 * 60 * 2);
 			const matchStage = {
 				"metadata.teamId": new ObjectId(teamId),
+				createdAt: { $gte: twoHoursAgo },
+				$or: [{ status: false }, { statusCode: 5000 }],
 			};
 			const checks = await CheckModel.aggregate(buildChecksSummaryByTeamIdPipeline({ matchStage }));
-			return checks[0].summary;
+			return checks[0]?.summary || { totalChecks: 0, resolvedChecks: 0, downChecks: 0, cannotResolveChecks: 0 };
 		} catch (error) {
 			error.service = SERVICE_NAME;
 			error.method = "getChecksSummaryByTeamId";
