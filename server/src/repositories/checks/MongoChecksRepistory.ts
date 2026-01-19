@@ -221,12 +221,28 @@ class MongoChecksRepository implements IChecksRepository {
 		}
 		const mongoIds = monitorIds.map((id) => new mongoose.Types.ObjectId(id));
 		const limitPerMonitor = options?.limitPerMonitor ?? 25;
+
+		// Optimization: If only one monitor is requested and we only want the top N,
+		// use a regular find() with sort and limit which is much faster on time-series.
+		if (mongoIds.length === 1) {
+			const docs = await CheckModel.find({ "metadata.monitorId": mongoIds[0] })
+				.sort({ createdAt: -1 })
+				.limit(limitPerMonitor)
+				.lean();
+
+			return {
+				[monitorIds[0]]: docs.map((doc) => this.toEntity(doc as any)),
+			};
+		}
+
 		const checkGroups = await CheckModel.aggregate([
 			{
 				$match: {
 					"metadata.monitorId": { $in: mongoIds },
 				},
 			},
+			// Sort is expensive on time-series aggregation if not covered by index.
+			// By sorting only by monitorId first, we might help the group stage.
 			{ $sort: { "metadata.monitorId": 1, createdAt: -1 } },
 			{
 				$group: {
