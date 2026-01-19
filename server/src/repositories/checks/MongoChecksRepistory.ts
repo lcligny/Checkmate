@@ -231,7 +231,7 @@ class MongoChecksRepository implements IChecksRepository {
 				.lean();
 
 			return {
-				[monitorIds[0]]: docs.map((doc) => this.toEntity(doc as any)),
+				[monitorIds[0] as string]: docs.map((doc) => this.toEntity(doc as any)),
 			};
 		}
 
