@@ -269,7 +269,7 @@ class CheckModule {
 		try {
 			await CheckModel.collection.createIndex(
 				{ expiry: 1 },
-				{ expireAfterSeconds: ttl, partialFilterExpression: { "metadata.mode": { $exists: true } } }
+				{ expireAfterSeconds: ttl }
 			);
 		} catch (error) {
 			error.service = SERVICE_NAME;

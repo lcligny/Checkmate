@@ -267,8 +267,8 @@ class StatusService {
 
 					if (lastManuallyResolvedIncident && lastManuallyResolvedIncident.endTime) {
 						try {
-							const checksAfterResolution = await Check.find({
-								monitorId: monitor.id,
+							const checksAfterResolution = await CheckModel.find({
+								"metadata.monitorId": monitor.id,
 								createdAt: { $gt: lastManuallyResolvedIncident.endTime },
 							})
 								.sort({ createdAt: 1 })
