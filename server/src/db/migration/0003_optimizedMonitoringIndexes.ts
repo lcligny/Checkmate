@@ -1,10 +1,11 @@
 import { CheckModel } from "@/db/models/index.js";
+import { type IndexSpecification, type CreateIndexesOptions } from "mongodb";
 
 async function optimizedMonitoringIndexes() {
 	const collection = CheckModel.collection;
 
 	// Define desired composite indexes
-	const indexes = [
+	const indexes: { spec: IndexSpecification; options: CreateIndexesOptions }[] = [
 		{ spec: { "metadata.monitorId": 1, "createdAt": -1 }, options: { name: "metadata.monitorId_1_createdAt_-1" } },
 		{ spec: { "metadata.monitorId": 1, "metadata.type": 1, "createdAt": -1 }, options: { name: "metadata.monitorId_1_metadata.type_1_createdAt_-1" } },
 		{ spec: { "metadata.monitorId": 1, "status": 1, "createdAt": -1 }, options: { name: "metadata.monitorId_1_status_1_createdAt_-1" } },
@@ -29,7 +30,7 @@ async function optimizedMonitoringIndexes() {
 		const existingIndexes = await collection.indexes();
 		const ttlIndex = existingIndexes.find(idx => idx.key.expiry !== undefined);
 		
-		if (ttlIndex) {
+		if (ttlIndex && ttlIndex.name) {
 			await collection.dropIndex(ttlIndex.name);
 		}
 	} catch (error) {
