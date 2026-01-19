@@ -21,62 +21,55 @@ class StatusService {
 		try {
 			const monitorId = monitor.id;
 			const { responseTime, status } = networkResponse;
-			// Get stats
-			let stats = await MonitorStats.findOne({ monitorId });
-			if (!stats) {
-				stats = new MonitorStats({
-					monitorId,
-					avgResponseTime: 0,
-					totalChecks: 0,
-					totalUpChecks: 0,
-					totalDownChecks: 0,
-					uptimePercentage: 0,
-					lastCheck: null,
-				});
-			}
 
-			// Update stats
+			const isUp = status === true;
+			const now = new Date().getTime();
 
-			// Last response time
-			stats.lastResponseTime = responseTime;
+			// Use atomic update to avoid findOne + save overhead and race conditions
+			await MonitorStats.findOneAndUpdate(
+				{ monitorId },
+				[
+					{
+						$set: {
+							lastResponseTime: responseTime ?? 0,
+							lastCheckTimestamp: now,
+							totalChecks: { $add: ["$totalChecks", 1] },
+							totalUpChecks: { $add: ["$totalUpChecks", isUp ? 1 : 0] },
+							totalDownChecks: { $add: ["$totalDownChecks", isUp ? 0 : 1] },
+							// Calculate moving average: (avg * count + new) / (count + 1)
+							avgResponseTime: {
+								$cond: [
+									{ $eq: ["$totalChecks", 0] },
+									responseTime ?? 0,
+									{
+										$divide: [
+											{ $add: [{ $multiply: ["$avgResponseTime", "$totalChecks"] }, responseTime ?? 0] },
+											{ $add: ["$totalChecks", 1] },
+										],
+									},
+								],
+							},
+							// Reset timeOfLastFailure if down, or set to now if it was 0 and we are up
+							timeOfLastFailure: isUp 
+								? { $cond: [{ $eq: ["$timeOfLastFailure", 0] }, now, "$timeOfLastFailure"] }
+								: 0,
+						},
+					},
+					{
+						$set: {
+							uptimePercentage: {
+								$cond: [
+									{ $gt: ["$totalChecks", 0] },
+									{ $divide: ["$totalUpChecks", "$totalChecks"] },
+									isUp ? 1 : 0
+								]
+							}
+						}
+					}
+				],
+				{ upsert: true, new: true, setDefaultsOnInsert: true }
+			);
 
-			// Avg response time:
-			let avgResponseTime = stats.avgResponseTime;
-			if (typeof responseTime !== "undefined" && responseTime !== null) {
-				if (avgResponseTime === 0) {
-					avgResponseTime = responseTime;
-				} else {
-					avgResponseTime = (avgResponseTime * (stats.totalChecks - 1) + responseTime) / stats.totalChecks;
-				}
-			}
-			stats.avgResponseTime = avgResponseTime;
-
-			// Total checks
-			stats.totalChecks++;
-			if (status === true) {
-				stats.totalUpChecks++;
-				// Update the timeSinceLastFailure if needed
-				if (stats.timeOfLastFailure === 0) {
-					stats.timeOfLastFailure = new Date().getTime();
-				}
-			} else {
-				stats.totalDownChecks++;
-				stats.timeOfLastFailure = 0;
-			}
-
-			// Calculate uptime percentage
-			let uptimePercentage;
-			if (stats.totalChecks > 0) {
-				uptimePercentage = stats.totalUpChecks / stats.totalChecks;
-			} else {
-				uptimePercentage = status === true ? 100 : 0;
-			}
-			stats.uptimePercentage = uptimePercentage;
-
-			// latest check
-			stats.lastCheckTimestamp = new Date().getTime();
-
-			await stats.save();
 			return true;
 		} catch (error) {
 			this.logger.error({
